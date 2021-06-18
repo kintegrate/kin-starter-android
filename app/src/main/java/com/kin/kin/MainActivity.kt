@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
             /*Send a single transaction containing the payment items*/
             kin.sendKin(
                 paymentItems,
-                "C2Tb36xUjDDiN4H3xE2T7PuBFb1gdCvP7znen1m8FStJ",
+                "Don8L4DTVrUrRAcVTsFoCRqei5Mokde3CV3K9Ut4nAGZ",
                 KinBinaryMemo.TransferType.Spend,
                 ::sentKin
             )
