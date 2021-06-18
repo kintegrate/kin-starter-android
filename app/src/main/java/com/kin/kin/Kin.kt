@@ -31,14 +31,14 @@ import kotlin.reflect.KFunction2
  */
 
 class Kin(
-    private val appContext: Context,
-    private val production: Boolean,
-    private val appIndex: Int,
-    private val appAddress: String,
-    private val credentialsUser: String,
-    private val credentialsPass: String,
-    private val balanceChanged: ((balance: KinBalance) -> Unit)? = null,
-    private val paymentHappened: ((payments: List<KinPayment>) -> Unit)? = null
+        private val appContext: Context,
+        private val production: Boolean,
+        private val appIndex: Int,
+        private val appAddress: String,
+        private val credentialsUser: String,
+        private val credentialsPass: String,
+        private val balanceChanged: ((balance: KinBalance) -> Unit)? = null,
+        private val paymentHappened: ((payments: List<KinPayment>) -> Unit)? = null
 ) {
     private val lifecycle = DisposeBag()
 
@@ -94,26 +94,26 @@ class Kin(
      * @param paymentSucceeded callback to indicate completion or failure of a payment
      */
     fun sendKin(
-        paymentItems: List<Pair<String, Double>>,
-        address: String,
-        paymentType: KinBinaryMemo.TransferType,
-        paymentSucceeded: KFunction2<KinPayment?, Throwable?, Unit>? = null
+            paymentItems: List<Pair<String, Double>>,
+            address: String,
+            paymentType: KinBinaryMemo.TransferType,
+            paymentSucceeded: KFunction2<KinPayment?, Throwable?, Unit>? = null
     ) {
         val kinAccount: KinAccount.Id = kinAccount(address)
         val invoice = buildInvoice(paymentItems)
         val amount = invoiceTotal(paymentItems)
 
         context.sendKinPayment(
-            KinAmount(amount),
-            kinAccount,
-            buildMemo(invoice, paymentType),
-            Optional.of(invoice)
+                KinAmount(amount),
+                kinAccount,
+                buildMemo(invoice, paymentType),
+                Optional.of(invoice)
         )
-            .then({ payment: KinPayment ->
-                paymentSucceeded?.invoke(payment, null)
-            }) { error: Throwable ->
-                paymentSucceeded?.invoke(null, error)
-            }
+                .then({ payment: KinPayment ->
+                    paymentSucceeded?.invoke(payment, null)
+                }) { error: Throwable ->
+                    paymentSucceeded?.invoke(null, error)
+                }
     }
 
     private fun invoiceTotal(paymentItems: List<Pair<String, Double>>): Double {
@@ -131,9 +131,9 @@ class Kin(
 
         paymentItems.forEach {
             invoiceBuilder.addLineItems(
-                listOf(
-                    LineItem.Builder(it.first, KinAmount(it.second)).build()
-                )
+                    listOf(
+                            LineItem.Builder(it.first, KinAmount(it.second)).build()
+                    )
             )
         }
 
@@ -141,8 +141,8 @@ class Kin(
     }
 
     private fun buildMemo(
-        invoice: Invoice,
-        transferType: KinBinaryMemo.TransferType
+            invoice: Invoice,
+            transferType: KinBinaryMemo.TransferType
     ): KinMemo {
         val memo = KinBinaryMemo.Builder(appIndex).setTranferType(transferType)
         val invoiceList = InvoiceList.Builder().addInvoice(invoice).build()
@@ -163,30 +163,30 @@ class Kin(
 
     private fun watchPayments() {
         observerPayments = context.observePayments(ObservationMode.Passive)
-            .add { payments: List<KinPayment> ->
-                paymentHappened?.invoke(payments)
-            }
-            .disposedBy(lifecycle)
+                .add { payments: List<KinPayment> ->
+                    paymentHappened?.invoke(payments)
+                }
+                .disposedBy(lifecycle)
     }
 
     private fun watchBalance() {
         //watch for changes to this account
         observerBalance = context.observeBalance(ObservationMode.Passive)
-            .add { kinBalance: KinBalance ->
-                balanceChanged?.invoke(kinBalance)
-            }.disposedBy(lifecycle)
+                .add { kinBalance: KinBalance ->
+                    balanceChanged?.invoke(kinBalance)
+                }.disposedBy(lifecycle)
     }
 
     private fun getKinContext(accountId: String): KinAccountContext {
         return KinAccountContext.Builder(environment)
-            .useExistingAccount(KinAccount.Id(accountId))
-            .build()
+                .useExistingAccount(KinAccount.Id(accountId))
+                .build()
     }
 
     private fun createAccount(): String {
         val kinContext = KinAccountContext.Builder(environment)
-            .createNewAccount()
-            .build()
+                .createNewAccount()
+                .build()
         return kinContext.accountId.stellarBase32Encode()
     }
 
@@ -194,30 +194,29 @@ class Kin(
         val storageLoc = appContext.filesDir.toString() + "/kin"
 
         val networkEnv: NetworkEnvironment = if (production) {
-            NetworkEnvironment.KinStellarMainNetKin3
+            NetworkEnvironment.MainNet
         } else {
-            NetworkEnvironment.KinStellarTestNetKin3
+            NetworkEnvironment.TestNet
         }
 
         return KinEnvironment.Agora.Builder(networkEnv)
-            .setAppInfoProvider(object : AppInfoProvider {
-                override val appInfo: AppInfo =
-                    AppInfo(
-                        AppIdx(appIndex),
-                        KinAccount.Id(appAddress),
-                        appContext.applicationInfo.loadLabel(appContext.packageManager).toString(),
-                        R.drawable.app_icon
-                    )
+                .setAppInfoProvider(object : AppInfoProvider {
+                    override val appInfo: AppInfo =
+                            AppInfo(
+                                    AppIdx(appIndex),
+                                    KinAccount.Id(appAddress),
+                                    appContext.applicationInfo.loadLabel(appContext.packageManager).toString(),
+                                    R.drawable.app_icon
+                            )
 
-                override fun getPassthroughAppUserCredentials(): AppUserCreds {
-                    return AppUserCreds(
-                        credentialsUser,
-                        credentialsPass
-                    )
-                }
-            })
-            .setMinApiVersion(4) //make sure we're on the Agora chain (not the former stellar)
-            .setStorage(KinFileStorage.Builder(storageLoc))
-            .build()
+                    override fun getPassthroughAppUserCredentials(): AppUserCreds {
+                        return AppUserCreds(
+                                credentialsUser,
+                                credentialsPass
+                        )
+                    }
+                })
+                .setStorage(KinFileStorage.Builder(storageLoc))
+                .build()
     }
 }
