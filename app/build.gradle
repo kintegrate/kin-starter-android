@@ -36,7 +36,11 @@ repositories {
     maven { url "https://jitpack.io/" } // Jitpack is used for OkSSE fork only
 }
 dependencies {
-    implementation "org.kin.sdk.android:base:1.+"
+    implementation ("org.kin.sdk.android:base:2.0.0") {
+        exclude module: 'libsodium-jni'
+    }
+    implementation('com.github.joshjdevl.libsodiumjni:libsodium-jni-aar:2.0.1')
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.3.2'
     implementation 'androidx.appcompat:appcompat:1.2.0'
